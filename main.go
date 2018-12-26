@@ -73,7 +73,9 @@ func LoadConfig(filename string) error {
 func main() {
 	glog.Info("starting proxy server.")
 
-	LoadConfig(*configFile)
+	if err := LoadConfig(*configFile); err != nil {
+		glog.Fatal("failed to load config file.")
+	}
 
 	http.HandleFunc("/", ReDirect)
 
