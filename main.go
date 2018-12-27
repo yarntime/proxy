@@ -1,20 +1,20 @@
 package main
 
 import (
-	"flag"
-	"github.com/golang/glog"
-	"net/http"
-	"io/ioutil"
-	"sync"
-	"strings"
-	io "io/ioutil"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"github.com/golang/glog"
+	"io/ioutil"
+	io "io/ioutil"
+	"net/http"
+	"strings"
+	"sync"
 )
 
 var port *string
 var configFile *string
-var rootDir    *string
+var rootDir *string
 var records map[string]string
 var lock sync.Mutex
 
@@ -37,13 +37,13 @@ func GetTarget(path string) string {
 	return ""
 }
 
-func ReDirect(w http.ResponseWriter, r *http.Request) {
+func Redirect(w http.ResponseWriter, r *http.Request) {
 
 	target := GetTarget(r.URL.Path)
 
 	if target != "" {
 		client := &http.Client{}
-		req, _ := http.NewRequest(r.Method, target + r.URL.Path, r.Body)
+		req, _ := http.NewRequest(r.Method, target+r.URL.Path, r.Body)
 		for k, v := range r.Header {
 			req.Header[k] = v
 		}
@@ -88,9 +88,9 @@ func main() {
 		glog.Fatal("failed to load config file.")
 	}
 
-	http.HandleFunc("/", ReDirect)
+	http.HandleFunc("/", Redirect)
 
-	if err := http.ListenAndServe("0.0.0.0:" + *port, nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:"+*port, nil); err != nil {
 		glog.Error("failed to start proxy server.")
 	}
 }
