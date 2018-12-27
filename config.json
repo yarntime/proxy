@@ -1,4 +1,4 @@
 {
-  "sas": "http://www.baidu.com",
-  "cas": "http://www.bing.com"
+  "skyform-ncloud": "http://192.168.254.45:8080",
+  "skyform-nginx": "http://192.168.254.44:8080"
 }

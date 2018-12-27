@@ -14,12 +14,14 @@ import (
 
 var port *string
 var configFile *string
+var rootDir    *string
 var records map[string]string
 var lock sync.Mutex
 
 func init() {
 	port = flag.String("http", "8080", "proxy listen addr")
 	configFile = flag.String("config", "./config.json", "config file")
+	rootDir = flag.String("rootDir", "./", "root dir")
 	flag.Set("alsologtostderr", "true")
 	flag.Parse()
 }
@@ -32,26 +34,35 @@ func GetTarget(path string) string {
 			return v
 		}
 	}
-	return fmt.Sprintf("http://127.0.0.1:%s/", port)
+	return ""
 }
 
 func ReDirect(w http.ResponseWriter, r *http.Request) {
 
 	target := GetTarget(r.URL.Path)
 
-	client := &http.Client{}
-	req, _ := http.NewRequest(r.Method, target + r.URL.Path, r.Body)
+	if target != "" {
+		client := &http.Client{}
+		req, _ := http.NewRequest(r.Method, target + r.URL.Path, r.Body)
+		for k, v := range r.Header {
+			req.Header[k] = v
+		}
+		res, err := client.Do(req)
+		if err != nil {
+			msg := fmt.Sprintf("failed to redirect request: %s", r.URL)
+			glog.Errorf(msg)
+			w.Write([]byte(msg))
+			return
+		}
 
-	res, err := client.Do(req)
-	if err != nil {
-		glog.Errorf("failed to redirect request: %s", r.URL.Path)
-		w.Write([]byte("failed to redirect request."))
-		return
+		defer res.Body.Close()
+		body, _ := ioutil.ReadAll(res.Body)
+		w.Write(body)
+	} else {
+		path := string(http.Dir(*rootDir + "/" + r.URL.Path))
+		http.ServeFile(w, r, path)
 	}
 
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	w.Write(body)
 }
 
 func LoadConfig(filename string) error {
